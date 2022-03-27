@@ -24,7 +24,23 @@ module.exports = function (app) {
     });
 
     app.get('/authors/add', function(req, res) {
-        res.render("authors_add.twig");
+        let roles = [{
+            "rol":"Cantante"
+        }, {
+            "rol":"Batería"
+        }, {
+            "rol":"Guitarrista"
+        }, {
+            "rol":"Bajista"
+        }, {
+            "rol":"Teclista"
+        }];
+
+        let response = {
+            seller: "Roles",
+            roles: roles
+        };
+        res.render("authors_add.twig", response);
     });
 
     app.post('/authors/add', function(req, res) {
