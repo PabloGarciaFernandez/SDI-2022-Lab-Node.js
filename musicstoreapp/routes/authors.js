@@ -20,7 +20,7 @@ module.exports = function (app) {
             authors: authors
         };
 
-        res.render("authors.twig", response);
+        res.render("authors/authors.twig", response);
     });
 
     app.get('/authors/add', function(req, res) {
@@ -40,7 +40,7 @@ module.exports = function (app) {
             seller: "Roles",
             roles: roles
         };
-        res.render("authors_add.twig", response);
+        res.render("authors/add.twig", response);
     });
 
     app.post('/authors/add', function(req, res) {

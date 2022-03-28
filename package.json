@@ -2,6 +2,7 @@
   "name": "sdi2122-1008-lab-nodejs",
   "version": "1.0.0",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "mongodb": "^4.1.2"
   }
 }
