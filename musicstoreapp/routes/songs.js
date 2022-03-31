@@ -1,5 +1,5 @@
 const {ObjectId} = require("mongodb");
-module.exports = function (app, songsRepository) {
+module.exports = function (app, songsRepository, commentsRepository) {
     app.get("/songs", function (req, res) {
         let songs = [{
             "title": "Blank space",
@@ -26,13 +26,7 @@ module.exports = function (app, songsRepository) {
     });
 
     app.get('/songs/add', function (req, res) {
-
         res.render("songs/add.twig");
-    });
-
-    app.get('/songs/:id', function (req, res) {
-        let response = 'id: ' + req.params.id;
-        res.send(response);
     });
 
     app.post('/songs/add', function (req, res) {
@@ -126,10 +120,16 @@ module.exports = function (app, songsRepository) {
     app.get('/songs/:id', function (req, res) {
         let filter = {_id: ObjectId(req.params.id)};
         let options = {};
+        let filter2 = {song_id: ObjectId(req.params.id)};
+
         songsRepository.findSong(filter, options).then(song => {
-            res.render("song.twig", {song: song});
+            commentsRepository.getComments(filter2).then(comment => {
+                res.render("songs/song.twig", {song : song, comment : comment});
+            }).catch(error => {
+                res.send("Se ha producido un error al buscar los comentarios " + error);
+            });
         }).catch(error => {
-            res.send("Se ha producido un error al buscar la canción " + error)
+            res.send("Se ha producido un error al buscar la canción " + error);
         });
     })
 
