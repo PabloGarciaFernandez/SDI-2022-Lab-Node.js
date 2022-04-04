@@ -124,7 +124,7 @@ module.exports = function (app, songsRepository, commentsRepository) {
 
         songsRepository.findSong(filter, options).then(song => {
             commentsRepository.getComments(filter2).then(comment => {
-                res.render("songs/song.twig", {song : song, comment : comment});
+                res.render("songs/song.twig", {song: song, comment: comment});
             }).catch(error => {
                 res.send("Se ha producido un error al buscar los comentarios " + error);
             });
@@ -140,6 +140,19 @@ module.exports = function (app, songsRepository, commentsRepository) {
             res.render("publication.twig", {songs: songs});
         }).catch(error => {
             res.send("Se ha producido un error al listar las publicaciones del usuario:" + error)
+        });
+    })
+
+    app.get('/songs/delete/:id', function (req, res) {
+        let filter = {_id: ObjectId(req.params.id)};
+        songsRepository.deleteSong(filter, {}).then(result => {
+            if (result == null || result.deletedCount == 0) {
+                res.send("No se ha podido eliminar el registro");
+            } else {
+                res.redirect("/publications");
+            }
+        }).catch(error => {
+            res.send("Se ha producido un error al intentar eliminar la canción: " + error)
         });
     })
 
