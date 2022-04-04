@@ -84,3 +84,15 @@
 		</div>
 	</form>
 {% endblock %}
+<div class="row text-center">
+	<ul class="pagination">
+		{% for page in pages %}
+			<li class="page-item" id="pi-{{ page }}">
+				<a class="page-link" href="/shop/?page={{ page }}">{{ page }}</a>
+			</li>
+		{% endfor %}
+		<script>
+			$("#pi-" + "{{ currentPage }}").addClass("active");
+		</script>
+	</ul>
+</div>
