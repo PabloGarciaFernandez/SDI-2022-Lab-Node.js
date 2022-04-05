@@ -135,16 +135,42 @@ module.exports = function (app, songsRepository, commentsRepository) {
         });
     })
 
-    app.get('/songs/buy/:id', function (req, res) {
+    app.get('/songs/buy/:id', async function (req, res) {
         let songId = ObjectId(req.params.id);
         let shop = {user: req.session.user, songId: songId}
-        songsRepository.buySong(shop, function (shopId) {
-            if (shopId == null) {
-                res.send("Error al realizar la compra");
-            } else {
-                res.redirect("/purchases");
+        var sells = true;
+        let filter = {user: req.session.user, songId: songId};
+        let options = {};
+
+        await songsRepository.getPurchases(filter, options).then(async purchasedIds => {
+            for (let i = 0; i < purchasedIds.length; i++) {
+                sells = false;
             }
-        })
+            let filter = {"_id": songId, author: req.session.user};
+            let options = {};
+            await songsRepository.getSongs(filter, options).then(songs => {
+                for (let j = 0; j < songs.length; j++) {
+                    sells = false;
+                }
+            }).catch(error => {
+                res.send("Se ha producido un error al obtener las publicaciones del usuario: " + error)
+            });
+        }).catch(error => {
+            res.send("Se ha producido un error al obtener las canciones del usuario " + error)
+        });
+
+        if (sells) {
+            songsRepository.buySong(shop, function (shopId) {
+                if (shopId == null) {
+                    res.send("Error al realizar la compra");
+                } else {
+                    res.redirect("/purchases");
+                }
+            })
+        }
+        else{
+            res.redirect("/shop");
+        }
     });
 
     app.get('/purchases', function (req, res) {
@@ -167,14 +193,35 @@ module.exports = function (app, songsRepository, commentsRepository) {
         });
     })
 
-    app.get('/songs/:id', function (req, res) {
-        let filter = {_id: ObjectId(req.params.id)};
+    app.get('/songs/:id', async function (req, res) {
+        let songId = ObjectId(req.params.id);
+        let sells = true;
+        let filter = {user: req.session.user, songId: songId};
         let options = {};
+        await songsRepository.getPurchases(filter, options).then(async purchasedIds => {
+            for (let i = 0; i < purchasedIds.length; i++) {
+                sells = false;
+            }
+            let filter = {"_id": songId, author: req.session.user};
+            let options = {};
+            await songsRepository.getSongs(filter, options).then(songs => {
+                for (let j = 0; j < songs.length; j++) {
+                    sells = false;
+                }
+            }).catch(error => {
+                res.send("Se ha producido un error al obtener las publicaciones del usuario: " + error)
+            });
+        }).catch(error => {
+            res.send("Se ha producido un error al obtener las canciones del usuario " + error)
+        });
+
+        filter = {_id: ObjectId(req.params.id)};
+        options = {};
         let filter2 = {song_id: ObjectId(req.params.id)};
 
         songsRepository.findSong(filter, options).then(song => {
             commentsRepository.getComments(filter2).then(comment => {
-                res.render("songs/song.twig", {song: song, comment: comment});
+                res.render("songs/song.twig", {song: song, comment: comment, sell: sells});
             }).catch(error => {
                 res.send("Se ha producido un error al buscar los comentarios " + error);
             });
