@@ -38,7 +38,7 @@ module.exports = function (app, songsRepository, usersRepository) {
     app.delete('/api/v1.0/songs/:id', function (req, res) {
         try {
             let songId = ObjectId(req.params.id)
-            let filter = {_id: songId, author: req.session.user}
+            let filter = {_id: songId, author: res.user}
             songsRepository.deleteSong(filter, {}).then(result => {
                 if (result === null || result.deletedCount === 0) {
                     res.status(404);
@@ -63,7 +63,7 @@ module.exports = function (app, songsRepository, usersRepository) {
                 title: req.body.title,
                 kind: req.body.kind,
                 price: req.body.price,
-                author: req.session.user
+                author: res.user
             }
             // Validar aquí: título, género, precio y autor.
 
@@ -89,7 +89,7 @@ module.exports = function (app, songsRepository, usersRepository) {
     app.put('/api/v1.0/songs/:id', function (req, res) {
         try {
             let songId = ObjectId(req.params.id);
-            let filter = {_id: songId, author: req.session.user};
+            let filter = {_id: songId, author: res.user};
             //Si la _id NO no existe, no crea un nuevo documento.
             const options = {upsert: false};
             let song = {}
