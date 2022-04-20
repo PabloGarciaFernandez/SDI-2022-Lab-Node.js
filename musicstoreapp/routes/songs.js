@@ -167,8 +167,7 @@ module.exports = function (app, songsRepository, commentsRepository) {
                     res.redirect("/purchases");
                 }
             })
-        }
-        else{
+        } else {
             res.redirect("/shop");
         }
     });
@@ -194,41 +193,56 @@ module.exports = function (app, songsRepository, commentsRepository) {
     })
 
     app.get('/songs/:id', async function (req, res) {
-        let songId = ObjectId(req.params.id);
-        let sells = true;
-        let filter = {user: req.session.user, songId: songId};
-        let options = {};
-        await songsRepository.getPurchases(filter, options).then(async purchasedIds => {
-            for (let i = 0; i < purchasedIds.length; i++) {
-                sells = false;
-            }
-            let filter = {"_id": songId, author: req.session.user};
+            let songId = ObjectId(req.params.id);
+            let sells = true;
+            let filter = {user: req.session.user, songId: songId};
             let options = {};
-            await songsRepository.getSongs(filter, options).then(songs => {
-                for (let j = 0; j < songs.length; j++) {
+            await songsRepository.getPurchases(filter, options).then(async purchasedIds => {
+                for (let i = 0; i < purchasedIds.length; i++) {
                     sells = false;
                 }
+                let filter = {"_id": songId, author: req.session.user};
+                let options = {};
+                await songsRepository.getSongs(filter, options).then(songs => {
+                    for (let j = 0; j < songs.length; j++) {
+                        sells = false;
+                    }
+                }).catch(error => {
+                    res.send("Se ha producido un error al obtener las publicaciones del usuario: " + error)
+                });
             }).catch(error => {
-                res.send("Se ha producido un error al obtener las publicaciones del usuario: " + error)
+                res.send("Se ha producido un error al obtener las canciones del usuario " + error)
             });
-        }).catch(error => {
-            res.send("Se ha producido un error al obtener las canciones del usuario " + error)
-        });
 
-        filter = {_id: ObjectId(req.params.id)};
-        options = {};
-        let filter2 = {song_id: ObjectId(req.params.id)};
+            filter = {_id: ObjectId(req.params.id)};
+            options = {};
+            let filter2 = {song_id: ObjectId(req.params.id)};
 
-        songsRepository.findSong(filter, options).then(song => {
-            commentsRepository.getComments(filter2).then(comment => {
-                res.render("songs/song.twig", {song: song, comment: comment, sell: sells});
+            songsRepository.findSong(filter, options).then(song => {
+                commentsRepository.getComments(filter2).then(comment => {
+                    let settings = {
+                        url: "https://www.freeforexapi.com/api/live?pairs=EURUSD",
+                        method: "get",
+                        headers: {"token": "ejemplo",}
+                    }
+                    let rest = app.get("rest");
+                    rest(settings, function (error, response, body) {
+                        console.log("cod: " + response.statusCode + " Cuerpo :" + body);
+                        let responseObject = JSON.parse(body);
+                        let rateUSD = responseObject.rates.EURUSD.rate;
+                        // nuevo campo "usd" redondeado a dos decimales
+                        let songValue = rateUSD * song.price;
+                        song.usd = Math.round(songValue * 100) / 100;
+                        res.render("songs/song.twig", {song: song, comment: comment, sell: sells});
+                    })
+                }).catch(error => {
+                    res.send("Se ha producido un error al buscar los comentarios " + error);
+                });
             }).catch(error => {
-                res.send("Se ha producido un error al buscar los comentarios " + error);
+                res.send("Se ha producido un error al buscar la canción " + error);
             });
-        }).catch(error => {
-            res.send("Se ha producido un error al buscar la canción " + error);
-        });
-    })
+        }
+    )
 
     app.get('/publications', function (req, res) {
         let filter = {author: req.session.user};
